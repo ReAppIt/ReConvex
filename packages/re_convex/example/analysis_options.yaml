@@ -1,0 +1,38 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    - always_declare_return_types
+    - always_use_package_imports
+    - avoid_catches_without_on_clauses
+    - avoid_dynamic_calls
+    - avoid_print
+    - avoid_slow_async_io
+    - avoid_type_to_string
+    - cancel_subscriptions
+    - close_sinks
+    - comment_references
+    - directives_ordering
+    - only_throw_errors
+    - prefer_final_fields
+    - prefer_final_locals
+    - prefer_single_quotes
+    - public_member_api_docs
+    - sort_pub_dependencies
+    - test_types_in_equals
+    - throw_in_finally
+    - type_annotate_public_apis
+    - unawaited_futures
+    - unnecessary_await_in_return
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - use_rethrow_when_possible
+    - use_super_parameters

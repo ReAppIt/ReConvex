@@ -1,0 +1,14 @@
+name: re_convex_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+
+workspace:
+  - packages/re_convex
+  - packages/re_convex/example
+  - packages/re_convex_generator
+
+dev_dependencies:
+  # build 4.1.0 breaks build_runner 2.16.1, the newest analyzer 13 allows.
+  build: ">=4.0.0 <4.1.0"

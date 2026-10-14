@@ -1,0 +1,8 @@
+builders:
+  re_convex:
+    import: "package:re_convex_generator/re_convex_generator.dart"
+    builder_factories: ["convexApiBuilder"]
+    build_extensions: { ".dart": [".re_convex.g.part"] }
+    build_to: cache
+    auto_apply: dependents
+    applies_builders: ["source_gen|combining_builder"]

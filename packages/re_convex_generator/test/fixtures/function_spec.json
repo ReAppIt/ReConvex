@@ -1,0 +1,824 @@
+{
+  "functions": [
+    {
+      "args": {
+        "type": "object",
+        "value": {
+          "channel": {
+            "fieldType": {
+              "tableName": "channels",
+              "type": "id"
+            },
+            "optional": false
+          },
+          "paginationOpts": {
+            "fieldType": {
+              "type": "object",
+              "value": {
+                "cursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": false
+                },
+                "endCursor": {
+                  "fieldType": {
+                    "type": "union",
+                    "value": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "optional": true
+                },
+                "id": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumBytesRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "maximumRowsRead": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": true
+                },
+                "numItems": {
+                  "fieldType": {
+                    "type": "number"
+                  },
+                  "optional": false
+                }
+              }
+            },
+            "optional": false
+          }
+        }
+      },
+      "functionType": "Query",
+      "identifier": "messages.js:list",
+      "returns": {
+        "type": "object",
+        "value": {
+          "continueCursor": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "isDone": {
+            "fieldType": {
+              "type": "boolean"
+            },
+            "optional": false
+          },
+          "page": {
+            "fieldType": {
+              "type": "array",
+              "value": {
+                "type": "object",
+                "value": {
+                  "_creationTime": {
+                    "fieldType": {
+                      "type": "number"
+                    },
+                    "optional": false
+                  },
+                  "_id": {
+                    "fieldType": {
+                      "tableName": "messages",
+                      "type": "id"
+                    },
+                    "optional": false
+                  },
+                  "author": {
+                    "fieldType": {
+                      "tableName": "users",
+                      "type": "id"
+                    },
+                    "optional": false
+                  },
+                  "body": {
+                    "fieldType": {
+                      "type": "string"
+                    },
+                    "optional": false
+                  },
+                  "channel": {
+                    "fieldType": {
+                      "tableName": "channels",
+                      "type": "id"
+                    },
+                    "optional": false
+                  },
+                  "content": {
+                    "fieldType": {
+                      "type": "union",
+                      "value": [
+                        {
+                          "type": "object",
+                          "value": {
+                            "kind": {
+                              "fieldType": {
+                                "type": "literal",
+                                "value": "text"
+                              },
+                              "optional": false
+                            },
+                            "text": {
+                              "fieldType": {
+                                "type": "string"
+                              },
+                              "optional": false
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "value": {
+                            "kind": {
+                              "fieldType": {
+                                "type": "literal",
+                                "value": "image"
+                              },
+                              "optional": false
+                            },
+                            "url": {
+                              "fieldType": {
+                                "type": "string"
+                              },
+                              "optional": false
+                            },
+                            "width": {
+                              "fieldType": {
+                                "type": "number"
+                              },
+                              "optional": true
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "optional": false
+                  },
+                  "reactions": {
+                    "fieldType": {
+                      "keys": {
+                        "type": "string"
+                      },
+                      "type": "record",
+                      "values": {
+                        "fieldType": {
+                          "type": "bigint"
+                        },
+                        "optional": false
+                      }
+                    },
+                    "optional": true
+                  },
+                  "status": {
+                    "fieldType": {
+                      "type": "union",
+                      "value": [
+                        {
+                          "type": "literal",
+                          "value": "sent"
+                        },
+                        {
+                          "type": "literal",
+                          "value": "read"
+                        }
+                      ]
+                    },
+                    "optional": true
+                  },
+                  "tags": {
+                    "fieldType": {
+                      "type": "array",
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "optional": false
+                  }
+                }
+              }
+            },
+            "optional": false
+          },
+          "pageStatus": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "SplitRecommended"
+                },
+                {
+                  "type": "literal",
+                  "value": "SplitRequired"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "splitCursor": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": true
+          }
+        }
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {
+          "body": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": false
+          },
+          "channel": {
+            "fieldType": {
+              "tableName": "channels",
+              "type": "id"
+            },
+            "optional": false
+          },
+          "content": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "object",
+                  "value": {
+                    "kind": {
+                      "fieldType": {
+                        "type": "literal",
+                        "value": "text"
+                      },
+                      "optional": false
+                    },
+                    "text": {
+                      "fieldType": {
+                        "type": "string"
+                      },
+                      "optional": false
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "value": {
+                    "kind": {
+                      "fieldType": {
+                        "type": "literal",
+                        "value": "image"
+                      },
+                      "optional": false
+                    },
+                    "url": {
+                      "fieldType": {
+                        "type": "string"
+                      },
+                      "optional": false
+                    },
+                    "width": {
+                      "fieldType": {
+                        "type": "number"
+                      },
+                      "optional": true
+                    }
+                  }
+                }
+              ]
+            },
+            "optional": true
+          },
+          "status": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": "sent"
+                },
+                {
+                  "type": "literal",
+                  "value": "read"
+                }
+              ]
+            },
+            "optional": true
+          }
+        }
+      },
+      "functionType": "Mutation",
+      "identifier": "messages.js:send",
+      "returns": {
+        "tableName": "messages",
+        "type": "id"
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {
+          "id": {
+            "fieldType": {
+              "tableName": "messages",
+              "type": "id"
+            },
+            "optional": false
+          }
+        }
+      },
+      "functionType": "Query",
+      "identifier": "messages.js:get",
+      "returns": {
+        "type": "union",
+        "value": [
+          {
+            "type": "object",
+            "value": {
+              "_creationTime": {
+                "fieldType": {
+                  "type": "number"
+                },
+                "optional": false
+              },
+              "_id": {
+                "fieldType": {
+                  "tableName": "messages",
+                  "type": "id"
+                },
+                "optional": false
+              },
+              "author": {
+                "fieldType": {
+                  "tableName": "users",
+                  "type": "id"
+                },
+                "optional": false
+              },
+              "body": {
+                "fieldType": {
+                  "type": "string"
+                },
+                "optional": false
+              },
+              "channel": {
+                "fieldType": {
+                  "tableName": "channels",
+                  "type": "id"
+                },
+                "optional": false
+              },
+              "content": {
+                "fieldType": {
+                  "type": "union",
+                  "value": [
+                    {
+                      "type": "object",
+                      "value": {
+                        "kind": {
+                          "fieldType": {
+                            "type": "literal",
+                            "value": "text"
+                          },
+                          "optional": false
+                        },
+                        "text": {
+                          "fieldType": {
+                            "type": "string"
+                          },
+                          "optional": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "value": {
+                        "kind": {
+                          "fieldType": {
+                            "type": "literal",
+                            "value": "image"
+                          },
+                          "optional": false
+                        },
+                        "url": {
+                          "fieldType": {
+                            "type": "string"
+                          },
+                          "optional": false
+                        },
+                        "width": {
+                          "fieldType": {
+                            "type": "number"
+                          },
+                          "optional": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "optional": false
+              },
+              "reactions": {
+                "fieldType": {
+                  "keys": {
+                    "type": "string"
+                  },
+                  "type": "record",
+                  "values": {
+                    "fieldType": {
+                      "type": "bigint"
+                    },
+                    "optional": false
+                  }
+                },
+                "optional": true
+              },
+              "status": {
+                "fieldType": {
+                  "type": "union",
+                  "value": [
+                    {
+                      "type": "literal",
+                      "value": "sent"
+                    },
+                    {
+                      "type": "literal",
+                      "value": "read"
+                    }
+                  ]
+                },
+                "optional": true
+              },
+              "tags": {
+                "fieldType": {
+                  "type": "array",
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "optional": false
+              }
+            }
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "functionType": "Query",
+      "identifier": "messages.js:count",
+      "returns": {
+        "type": "bigint"
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "functionType": "Query",
+      "identifier": "users.js:me",
+      "returns": {
+        "type": "union",
+        "value": [
+          {
+            "type": "object",
+            "value": {
+              "_creationTime": {
+                "fieldType": {
+                  "type": "number"
+                },
+                "optional": false
+              },
+              "_id": {
+                "fieldType": {
+                  "tableName": "users",
+                  "type": "id"
+                },
+                "optional": false
+              },
+              "avatar": {
+                "fieldType": {
+                  "type": "bytes"
+                },
+                "optional": true
+              },
+              "email": {
+                "fieldType": {
+                  "type": "string"
+                },
+                "optional": true
+              },
+              "name": {
+                "fieldType": {
+                  "type": "string"
+                },
+                "optional": false
+              },
+              "nickname": {
+                "fieldType": {
+                  "type": "union",
+                  "value": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "optional": true
+              },
+              "role": {
+                "fieldType": {
+                  "type": "union",
+                  "value": [
+                    {
+                      "type": "literal",
+                      "value": "admin"
+                    },
+                    {
+                      "type": "literal",
+                      "value": "member"
+                    }
+                  ]
+                },
+                "optional": false
+              },
+              "stats": {
+                "fieldType": {
+                  "type": "object",
+                  "value": {
+                    "likes": {
+                      "fieldType": {
+                        "type": "bigint"
+                      },
+                      "optional": false
+                    },
+                    "posts": {
+                      "fieldType": {
+                        "type": "number"
+                      },
+                      "optional": false
+                    }
+                  }
+                },
+                "optional": false
+              }
+            }
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {
+          "name": {
+            "fieldType": {
+              "type": "string"
+            },
+            "optional": true
+          },
+          "nickname": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "optional": true
+          },
+          "settings": {
+            "fieldType": {
+              "keys": {
+                "type": "string"
+              },
+              "type": "record",
+              "values": {
+                "fieldType": {
+                  "type": "any"
+                },
+                "optional": false
+              }
+            },
+            "optional": true
+          }
+        }
+      },
+      "functionType": "Mutation",
+      "identifier": "users.js:updateProfile",
+      "returns": {
+        "type": "null"
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "any"
+      },
+      "functionType": "Action",
+      "identifier": "admin/users.js:sync",
+      "returns": {
+        "type": "any"
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "any"
+      },
+      "functionType": "Mutation",
+      "identifier": "admin/users.js:purge",
+      "returns": {
+        "type": "null"
+      },
+      "visibility": {
+        "kind": "internal"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {}
+      },
+      "functionType": "Query",
+      "identifier": "channels.js:default",
+      "returns": {
+        "type": "array",
+        "value": {
+          "type": "object",
+          "value": {
+            "_creationTime": {
+              "fieldType": {
+                "type": "number"
+              },
+              "optional": false
+            },
+            "_id": {
+              "fieldType": {
+                "tableName": "channels",
+                "type": "id"
+              },
+              "optional": false
+            },
+            "name": {
+              "fieldType": {
+                "type": "string"
+              },
+              "optional": false
+            }
+          }
+        }
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {
+          "size": {
+            "fieldType": {
+              "type": "bigint"
+            },
+            "optional": false
+          }
+        }
+      },
+      "functionType": "Query",
+      "identifier": "matrix.js:get",
+      "returns": {
+        "type": "array",
+        "value": {
+          "type": "array",
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "args": {
+        "type": "object",
+        "value": {
+          "priority": {
+            "fieldType": {
+              "type": "union",
+              "value": [
+                {
+                  "type": "literal",
+                  "value": 1
+                },
+                {
+                  "type": "literal",
+                  "value": 2
+                }
+              ]
+            },
+            "optional": false
+          }
+        }
+      },
+      "functionType": "Mutation",
+      "identifier": "misc.js:new",
+      "returns": {
+        "type": "union",
+        "value": [
+          {
+            "tableName": "channels",
+            "type": "id"
+          },
+          {
+            "tableName": "users",
+            "type": "id"
+          }
+        ]
+      },
+      "visibility": {
+        "kind": "public"
+      }
+    },
+    {
+      "functionType": "HttpAction",
+      "method": "POST",
+      "path": "/webhook"
+    }
+  ],
+  "url": "https://happy-animal-123.convex.cloud"
+}

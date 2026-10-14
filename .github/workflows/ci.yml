@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: kuhnroyal/flutter-fvm-config-action/setup@v3
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed $(git ls-files '*.dart' ':!:*.g.dart')
+      - run: flutter analyze
+      - run: flutter test
+        working-directory: packages/re_convex
+      - run: dart test
+        working-directory: packages/re_convex_generator
+      # The committed api.g.dart must match the generator.
+      - run: dart run build_runner build && git diff --exit-code
+        working-directory: packages/re_convex/example
+      - run: flutter test
+        working-directory: packages/re_convex/example
+      - run: dart pub publish --dry-run
+        working-directory: packages/re_convex
+      - run: dart pub publish --dry-run
+        working-directory: packages/re_convex_generator

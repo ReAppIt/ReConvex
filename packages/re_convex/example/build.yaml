@@ -1,0 +1,6 @@
+targets:
+  $default:
+    sources:
+      - $package$
+      - lib/**
+      - convex/function_spec.json
