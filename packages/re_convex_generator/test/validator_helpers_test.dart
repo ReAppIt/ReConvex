@@ -4,6 +4,41 @@ import 'package:test/test.dart';
 
 ValidatorJson _v(Map<String, Object?> json) => ValidatorJson.fromJson(json);
 
+Map<String, Object?> _object(Map<String, Map<String, Object?>> fields) => {
+  'type': 'object',
+  'value': {
+    for (final MapEntry(:key, :value) in fields.entries)
+      key: {'fieldType': value, 'optional': false},
+  },
+};
+
+Map<String, Object?> _document(
+  String table,
+  Map<String, Map<String, Object?>> fields,
+) => _object({
+  '_creationTime': {'type': 'number'},
+  '_id': {'type': 'id', 'tableName': table},
+  ...fields,
+});
+
+Map<String, Object?> _array(Map<String, Object?> value) => {
+  'type': 'array',
+  'value': value,
+};
+
+Map<String, Object?> _union(List<Map<String, Object?>> members) => {
+  'type': 'union',
+  'value': members,
+};
+
+Map<String, Object?> _literals(List<String> values) => _union([
+  for (final value in values) {'type': 'literal', 'value': value},
+]);
+
+final _macros = _object({
+  'kcal': {'type': 'number'},
+});
+
 void main() {
   group('TypeMapper', () {
     late TypeMapper types;
@@ -91,6 +126,67 @@ void main() {
       };
       expect(code(doc), 'TasksDoc');
       expect(types.map(_v(doc), 'Other').code, 'TasksDoc');
+    });
+
+    test('names shapes after the document field that holds them', () {
+      final status = _literals(['open', 'done']);
+      final kind = _literals(['a', 'b']);
+      final tag = _union([
+        _object({
+          'kind': {'type': 'literal', 'value': 'text'},
+        }),
+        _object({
+          'kind': {'type': 'literal', 'value': 'image'},
+        }),
+      ]);
+      types.preferDocumentNames([
+        _v(
+          _object({
+            'log': _union([
+              _document('logs', {'macros': _macros}),
+              {'type': 'null'},
+            ]),
+          }),
+        ),
+        _v(_array(_document('tasks', {'status': status}))),
+        _v(
+          _object({
+            'continueCursor': {'type': 'string'},
+            'isDone': {'type': 'boolean'},
+            'page': _array(_document('notes', {'kind': kind, 'body': tag})),
+          }),
+        ),
+      ]);
+      expect(code(_macros), 'LogsDocMacros');
+      expect(code(status), 'TasksDocStatus');
+      expect(code(kind), 'NotesDocKind');
+      expect(code(tag), 'NotesDocBody');
+      expect(
+        types.declarations,
+        contains(startsWith('extension type NotesDocBodyText.fromValue(')),
+      );
+    });
+
+    test('prefers the shallowest field, then the first table and path', () {
+      final unit = _literals(['g', 'ml']);
+      types.preferDocumentNames([
+        _v(
+          _document('analyses', {
+            'items': _array(_object({'macros': _macros, 'unit': unit})),
+          }),
+        ),
+        _v(_document('products', {'macros': _macros})),
+        _v(_document('logs', {'macros': _macros, 'unit': unit, 'size': unit})),
+      ]);
+      expect(code(_macros), 'LogsDocMacros');
+      expect(code(unit), 'LogsDocSize');
+    });
+
+    test('keeps the context for shapes no document holds', () {
+      types.preferDocumentNames([
+        _v(_object({'macros': _macros})),
+      ]);
+      expect(code(_macros), 'Ctx');
     });
   });
 }

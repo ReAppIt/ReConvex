@@ -54,6 +54,82 @@ class TypeMapper {
   final Map<String, String> _literalNamesByKey = {};
   final Map<String, String> _unionNamesByKey = {};
   final Map<String, String> _idNamesByTable = {};
+  final Map<String, String> _preferredNames = {};
+
+  /// Names each object and union that a document in [validators] holds after
+  /// the shallowest document field holding it, like `TasksDocStatus`, for
+  /// whichever function declares it first; call before [map].
+  void preferDocumentNames(Iterable<ValidatorJson> validators) {
+    final best = <String, ({int depth, String table, String name})>{};
+    void offer(String key, String? table, String name, int depth) {
+      if (table == null) return;
+      final current = best[key];
+      if (current == null ||
+          depth < current.depth ||
+          depth == current.depth &&
+              (table.compareTo(current.table) < 0 ||
+                  table == current.table && name.compareTo(current.name) < 0)) {
+        best[key] = (depth: depth, table: table, name: name);
+      }
+    }
+
+    // [table] is the enclosing document's; null outside one.
+    void walk(ValidatorJson validator, String? table, String name, int depth) {
+      switch (validator) {
+        case ArrayValidator(:final value):
+          walk(value, table, '${name}Item', depth + 1);
+        case RecordValidator(:final values):
+          walk(values, table, '${name}Value', depth + 1);
+        case final ObjectValidator object:
+          if (_paginationItem(object) case final item?) {
+            walk(item, table, '${name}Item', depth + 1);
+            return;
+          }
+          final document = _documentTable(object);
+          if (document == null) offer(object.key, table, name, depth);
+          final (fieldTable, base, baseDepth) = document == null
+              ? (table, name, depth)
+              : (document, '${pascal(document)}Doc', 0);
+          for (final MapEntry(:key, value: field) in object.fields.entries) {
+            if (_isPaginationOpts(key, field)) continue;
+            walk(
+              field.fieldType,
+              fieldTable,
+              '$base${pascal(key)}',
+              baseDepth + 1,
+            );
+          }
+        case UnionValidator(:final members):
+          final nonNull = members.where((m) => !_isNull(m)).toList();
+          if (nonNull.isEmpty) return;
+          if (nonNull.length == 1) {
+            walk(nonNull.single, table, name, depth);
+          } else if (_stringLiterals(nonNull) case final values?) {
+            offer(_literalKey(values), table, name, depth);
+          } else if (_discriminatedVariants(nonNull) case final union?) {
+            offer(UnionValidator(nonNull).key, table, name, depth);
+            for (final MapEntry(key: tag, value: variant)
+                in union.variants.entries) {
+              walk(variant, table, '$name${pascal(tag)}', depth + 1);
+            }
+          } else {
+            // Other unions declare no types, but a member may be a document.
+            for (final member in nonNull) {
+              walk(member, null, name, depth);
+            }
+          }
+        default:
+          return;
+      }
+    }
+
+    for (final validator in validators) {
+      walk(validator, null, '', 0);
+    }
+    _preferredNames.addAll({
+      for (final MapEntry(:key, :value) in best.entries) key: value.name,
+    });
+  }
 
   /// Reserves a unique type name based on [candidate].
   String reserveName(String candidate) {
@@ -128,14 +204,19 @@ class TypeMapper {
     }
     final existing = _objectNamesByKey[object.key];
     if (existing != null) return NamedType(existing);
-    final idField = object.fields['_id'];
-    final candidate =
-        idField != null &&
-            idField.fieldType is IdValidator &&
-            object.fields.containsKey('_creationTime')
-        ? '${pascal((idField.fieldType as IdValidator).tableName)}Doc'
-        : context;
+    final document = _documentTable(object);
+    final candidate = document != null
+        ? '${pascal(document)}Doc'
+        : _preferredNames[object.key] ?? context;
     return NamedType(declareObject(object, reserveName(candidate)));
+  }
+
+  // The table of a document: an object with an `_id` and a `_creationTime`.
+  static String? _documentTable(ObjectValidator object) {
+    final id = object.fields['_id']?.fieldType;
+    return id is IdValidator && object.fields.containsKey('_creationTime')
+        ? id.tableName
+        : null;
   }
 
   // The item validator when [object] is a `paginationResultValidator` shape.
@@ -282,24 +363,29 @@ class TypeMapper {
     return buffer.toString();
   }
 
+  static bool _isNull(ValidatorJson v) =>
+      v is NullValidator || (v is LiteralValidator && v.value == null);
+
+  // The values of a union of two or more string literals, or null.
+  static List<String>? _stringLiterals(List<ValidatorJson> members) =>
+      members.length > 1 &&
+          members.every((m) => m is LiteralValidator && m.value is String)
+      ? [for (final m in members) (m as LiteralValidator).value! as String]
+      : null;
+
+  static String _literalKey(List<String> values) =>
+      ([...values]..sort()).join('\u0000');
+
   DartType _unionType(UnionValidator union, String context) {
-    bool isNull(ValidatorJson v) =>
-        v is NullValidator || (v is LiteralValidator && v.value == null);
-    final nonNull = union.members.where((m) => !isNull(m)).toList();
+    final nonNull = union.members.where((m) => !_isNull(m)).toList();
     final hasNull = nonNull.length != union.members.length;
     DartType nullable(DartType type) => hasNull ? type.asNullable : type;
 
     if (nonNull.isEmpty) return const NamedType('Null');
     if (nonNull.length == 1) return nullable(map(nonNull.single, context));
 
-    if (nonNull.every((m) => m is LiteralValidator && m.value is String)) {
-      return nullable(
-        NamedType(
-          _literalUnion([
-            for (final m in nonNull) (m as LiteralValidator).value! as String,
-          ], context),
-        ),
-      );
+    if (_stringLiterals(nonNull) case final values?) {
+      return nullable(NamedType(_literalUnion(values, context)));
     }
 
     final variants = _discriminatedVariants(nonNull);
@@ -307,7 +393,7 @@ class TypeMapper {
       final key = UnionValidator(nonNull).key;
       final name = _unionNamesByKey[key] ??= _discriminatedUnion(
         variants,
-        context,
+        _preferredNames[key] ?? context,
       );
       return nullable(NamedType(name));
     }
@@ -335,10 +421,10 @@ class TypeMapper {
   };
 
   String _literalUnion(List<String> values, String context) {
-    final key = ([...values]..sort()).join('\u0000');
+    final key = _literalKey(values);
     final existing = _literalNamesByKey[key];
     if (existing != null) return existing;
-    final name = reserveName(context);
+    final name = reserveName(_preferredNames[key] ?? context);
     _literalNamesByKey[key] = name;
     final constants = <String>{};
     final buffer = StringBuffer()
@@ -411,7 +497,7 @@ class TypeMapper {
           _objectNamesByKey[object.key] ??
           declareObject(
             object,
-            reserveName('$name${pascal(tag)}'),
+            reserveName(_preferredNames[object.key] ?? '$name${pascal(tag)}'),
             implementsName: name,
           );
       buffer

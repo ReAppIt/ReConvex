@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:build/build.dart';
@@ -56,6 +57,39 @@ Future<String> _failure(String spec, {bool withSpec = true}) async {
 }
 
 String _spec(String functions) => '{"url": "u", "functions": [$functions]}';
+
+String _function(
+  String identifier, {
+  Map<String, Object?> args = const {'type': 'object', 'value': {}},
+  Map<String, Object?> returns = const {'type': 'null'},
+}) => jsonEncode({
+  'args': args,
+  'functionType': 'Query',
+  'identifier': identifier,
+  'returns': returns,
+  'visibility': {'kind': 'public'},
+});
+
+Map<String, Object?> _object(Map<String, Map<String, Object?>> fields) => {
+  'type': 'object',
+  'value': {
+    for (final MapEntry(:key, :value) in fields.entries)
+      key: {'fieldType': value, 'optional': false},
+  },
+};
+
+Map<String, Object?> _document(
+  String table,
+  Map<String, Map<String, Object?>> fields,
+) => _object({
+  '_creationTime': {'type': 'number'},
+  '_id': {'type': 'id', 'tableName': table},
+  ...fields,
+});
+
+final _macros = _object({
+  'kcal': {'type': 'number'},
+});
 
 void main() {
   final fixture = File('test/fixtures/function_spec.json').readAsStringSync();
@@ -167,6 +201,63 @@ void main() {
       );
       expect(errors, contains('`a:userName`'));
       expect(errors, contains('`a:user_name`'));
+    });
+
+    test('names a shape after the document field, not the first function '
+        'using it', () async {
+      final level = {
+        'type': 'union',
+        'value': [
+          {'type': 'literal', 'value': 'low'},
+          {'type': 'literal', 'value': 'high'},
+        ],
+      };
+      final out = await _generate(
+        _spec(
+          [
+            _function(
+              'a.js:create',
+              args: _object({'level': level, 'macros': _macros}),
+            ),
+            _function(
+              'goals.js:get',
+              returns: _document('goals', {'level': level, 'macros': _macros}),
+            ),
+          ].join(', '),
+        ),
+      );
+      expect(out, contains('extension type const GoalsDocLevel._('));
+      expect(out, contains('extension type GoalsDocMacros.fromValue('));
+      expect(out, contains('required GoalsDocLevel level'));
+      expect(out, contains('required GoalsDocMacros macros'));
+      expect(out, isNot(contains('ACreateArgsLevel')));
+      expect(out, isNot(contains('ACreateArgsMacros')));
+    });
+
+    test('names a shape after the shallowest document field', () async {
+      final out = await _generate(
+        _spec(
+          [
+            _function(
+              'analyses.js:get',
+              returns: _document('analyses', {
+                'products': {
+                  'type': 'array',
+                  'value': _object({'macros': _macros}),
+                },
+              }),
+            ),
+            _function(
+              'logs.js:get',
+              returns: _document('logs', {'macros': _macros}),
+            ),
+          ].join(', '),
+        ),
+      );
+      expect(out, contains('extension type LogsDocMacros.fromValue('));
+      expect(out, contains('List<AnalysesDocProductsItem> get products'));
+      expect(out, contains('LogsDocMacros get macros'));
+      expect(out, isNot(contains('AnalysesDocProductsItemMacros')));
     });
   });
 }

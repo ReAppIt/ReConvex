@@ -15,7 +15,10 @@ final class _Node {
 ///
 /// Throws a [FormatException] when two members would share a name.
 String apiCodegen(List<FunctionSpec> functions, String apiName) {
-  final types = TypeMapper();
+  final types = TypeMapper()
+    ..preferDocumentNames([
+      for (final function in functions) ...[function.args, function.returns],
+    ]);
   final root = _Node();
   final sorted = [...functions]
     ..sort((a, b) {

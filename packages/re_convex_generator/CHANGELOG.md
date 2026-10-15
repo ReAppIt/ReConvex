@@ -1,3 +1,9 @@
+## 0.2.0
+
+- A shape a document holds is named after the shallowest document field
+  holding it, like `TasksDocStatus`, instead of after the first function that
+  uses it. Generated names change, so regenerate and update references.
+
 ## 0.1.0
 
 - Initial release: generates a typed `api` for re_convex from

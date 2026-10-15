@@ -97,9 +97,10 @@ nothing. Each has a constructor with named parameters, a getter per field and
 
 Literal unions accept values they don't list, so an app keeps working when a
 newer backend adds one; `values` lists the known ones. Types are named after
-the function and field: `MessagesListArgs`, `MessagesDocStatus`. A function
-without an args validator takes `Map<String, Object?>`; one without a returns
-validator returns `Object?`.
+the function and field, like `MessagesListArgs`; a shape a document holds is
+named after the shallowest document field holding it, like `MessagesDocStatus`,
+whichever function uses it first. A function without an args validator takes
+`Map<String, Object?>`; one without a returns validator returns `Object?`.
 
 ## Limitations
 

@@ -1,6 +1,6 @@
 name: re_convex_generator
 description: "Generates a typed Convex `api` for re_convex from the JSON that `npx convex function-spec` prints, as a build_runner part."
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/ReAppIt/ReConvex/tree/main/packages/re_convex_generator
 issue_tracker: https://github.com/ReAppIt/ReConvex/issues
 topics:

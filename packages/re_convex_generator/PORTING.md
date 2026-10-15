@@ -39,7 +39,8 @@ which have no Dart counterpart.
   `importPath` and `moduleIdentifier` are not ported.
 - **Types** are Dart extension types over the raw maps instead of structural
   types. Documents are recognised by `_id` and `_creationTime` and shared as
-  `<Table>Doc`.
+  `<Table>Doc`. A shape a document holds is named after the shallowest
+  document field holding it, whichever function declares it first.
 - **String-literal unions** accept unknown values, so an app keeps working
   when a newer backend adds one.
 - **Unions** other than `T | null`, string literals and objects tagged by one
